@@ -19,7 +19,7 @@ public class MSTFinder {
         return min_index;
     }
 
-    private static MST generateMST(Graph graph )
+    private static SpanningTree generateMST(Graph graph )
     {
         int noOfNodes = graph.getNoOfNodes();
 
@@ -49,7 +49,7 @@ public class MSTFinder {
             }
         }
 
-        return new MST(parent, key);
+        return new SpanningTree(parent, key);
     }
 
     public static void main(String[] args)
@@ -64,7 +64,7 @@ public class MSTFinder {
         g.addEdge(2,4,7);
         g.addEdge(3,4,9);
 
-        MST mst = generateMST(g);
+        SpanningTree mst = generateMST(g);
         mst.print();
     }
 
@@ -149,12 +149,12 @@ class Graph {
 }
 
 
-class MST{
+class SpanningTree {
 
     private int[] parent;
     private int[] key;
 
-    public MST(int[] parent, int[] key) {
+    public SpanningTree(int[] parent, int[] key) {
         this.parent = parent;
         this.key = key;
     }
