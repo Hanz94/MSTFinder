@@ -1,10 +1,31 @@
 import java.util.LinkedList;
+import java.util.Random;
 
 /**
  * created by hansikaweerasena
  * Date: 10/11/21
  **/
 public class MSTFinder {
+
+    public static void main(String[] args)
+    {
+
+        Graph g = new Graph(5);
+        g.addEdge(0,1,2);
+        g.addEdge(0, 3, 6);
+        g.addEdge(1,2,3);
+        g.addEdge(1,3,8);
+        g.addEdge(1,4,5);
+        g.addEdge(2,4,7);
+        g.addEdge(3,4,9);
+
+        SpanningTree mst = generateMST(g);
+        mst.print();
+
+        RandomGraphGenerator gg = RandomGraphGenerator.getRandomGraphGenerator();
+        Graph randomGraph = gg.generateRandomTree(5);
+        randomGraph.print();
+    }
 
     private static int minKey(int[] key, Boolean[] mstSet)
     {
@@ -51,23 +72,6 @@ public class MSTFinder {
 
         return new SpanningTree(parent, key);
     }
-
-    public static void main(String[] args)
-    {
-
-        Graph g = new Graph(5);
-        g.addEdge(0,1,2);
-        g.addEdge(0, 3, 6);
-        g.addEdge(1,2,3);
-        g.addEdge(1,3,8);
-        g.addEdge(1,4,5);
-        g.addEdge(2,4,7);
-        g.addEdge(3,4,9);
-
-        SpanningTree mst = generateMST(g);
-        mst.print();
-    }
-
 }
 
 
@@ -180,5 +184,91 @@ class SpanningTree {
         System.out.println("Edge \tWeight");
         for (int i = 1; i < parent.length; i++)
             System.out.println(parent[i] + " - " + i + "\t" + key[i]);
+    }
+}
+
+class RandomGraphGenerator {
+
+    private Random random;
+    private static RandomGraphGenerator randomGraphGenerator;
+
+    public static RandomGraphGenerator getRandomGraphGenerator() {
+        if (randomGraphGenerator == null) {
+            randomGraphGenerator = new RandomGraphGenerator();
+        }
+        return randomGraphGenerator;
+    }
+
+    private RandomGraphGenerator() {
+        random = new Random();
+    }
+
+    // Function to Generate Random Tree using Prufer Sequence
+    // Taken from https://www.geeksforgeeks.org/random-tree-generator-using-prufer-sequence-with-examples/ and modified
+    public Graph generateRandomTree(int n)
+    {
+        Graph graph = new Graph(n);
+        int length = n - 2;
+        int[] arr = new int[length];
+
+        // Loop to Generate Random Array
+        for (int i = 0; i < length; i++) {
+            arr[i] = random.nextInt(length + 1) + 1;
+        }
+        generateTreeEdges(arr, length, graph);
+        return graph;
+    }
+
+    private void generateTreeEdges(int prufer[], int m, Graph graph)
+    {
+        int vertices = m + 2;
+        int vertex_set[] = new int[vertices];
+
+        // Initialize the array of vertices
+        for (int i = 0; i < vertices; i++)
+            vertex_set[i] = 0;
+
+        // Number of occurrences of vertex in code
+        for (int i = 0; i < vertices - 2; i++)
+            vertex_set[prufer[i] - 1] += 1;
+
+        int j = 0;
+
+        // Find the smallest label not present in
+        // prufer[].
+        for (int i = 0; i < vertices - 2; i++) {
+            for (j = 0; j < vertices; j++) {
+
+                // If j+1 is not present in prufer set
+                if (vertex_set[j] == 0) {
+
+                    // Remove from Prufer set and print
+                    // pair.
+                    vertex_set[j] = -1;
+                    graph.addEdge(j, prufer[i] - 1, 1);
+                    vertex_set[prufer[i] - 1]--;
+
+                    break;
+                }
+            }
+        }
+
+        j = 0;
+
+        int temp_u = -1;
+        int temp_v = -1;
+        // For the last element
+        for (int i = 0; i < vertices; i++) {
+            if (vertex_set[i] == 0 && j == 0) {
+                temp_u = i;
+                j++;
+            }
+            else if (vertex_set[i] == 0 && j == 1) {
+                temp_v = i;
+            }
+        }
+        if(temp_u > 0 && temp_v >0){
+            graph.addEdge(temp_u,temp_v, 1);
+        }
     }
 }
