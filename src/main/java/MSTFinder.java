@@ -23,8 +23,15 @@ public class MSTFinder {
         mst.print();
 
         RandomGraphGenerator gg = RandomGraphGenerator.getRandomGraphGenerator();
-        Graph randomGraph = gg.generateRandomTree(5);
+        Graph randomGraph = gg.generateRandomGraph(10);
         randomGraph.print();
+
+        SpanningTree mst2 = generateMST(randomGraph);
+
+        if(mst2.getTotalWeight() == randomGraph.getMstWeight()){
+            System.out.println("Validated");
+        }
+
     }
 
     private static int minKey(int[] key, Boolean[] mstSet)
@@ -107,6 +114,7 @@ class Graph {
 
     private int noOfNodes;
     private LinkedList<Edge> adjLst[];
+    private int mstWeight;
 
     public Graph(int noOfNodes) {
         this.noOfNodes = noOfNodes;
@@ -120,8 +128,12 @@ class Graph {
         adjLst[v].add(new Edge(u, weight));
     }
 
+    public boolean haveEdge(int u, int v) {
+        return adjLst[u].contains(v);
+    }
+
     public void print() {
-        System.out.println("The Graph");
+        System.out.println("The Graph with MST Weight : " + this.mstWeight);
         for (int i = 0; i < adjLst.length; i++) {
             System.out.print(i + " -> { ");
 
@@ -133,7 +145,7 @@ class Graph {
                 int size = list.size();
                 for (int j = 0; j < size; j++) {
 
-                    System.out.print(list.get(j).getNodeId());
+                    System.out.print(list.get(j).getNodeId() + "(" + list.get(j).getWeight() + ")");
                     if (j < size - 1)
                         System.out.print(" , ");
                 }
@@ -149,6 +161,14 @@ class Graph {
 
     public LinkedList<Edge>[] getAdjLst() {
         return adjLst;
+    }
+
+    public int getMstWeight() {
+        return mstWeight;
+    }
+
+    public void setMstWeight(int mst_weight) {
+        this.mstWeight = mst_weight;
     }
 }
 
@@ -185,12 +205,22 @@ class SpanningTree {
         for (int i = 1; i < parent.length; i++)
             System.out.println(parent[i] + " - " + i + "\t" + key[i]);
     }
+
+    public int getTotalWeight(){
+        {
+            int sum = 0;
+            for (int i = 0; i < key.length; i++)
+                sum += key[i];
+            return sum;
+        }
+    }
 }
 
 class RandomGraphGenerator {
 
     private Random random;
     private static RandomGraphGenerator randomGraphGenerator;
+    private final int MAX_WEIGHT = 20;
 
     public static RandomGraphGenerator getRandomGraphGenerator() {
         if (randomGraphGenerator == null) {
@@ -203,11 +233,34 @@ class RandomGraphGenerator {
         random = new Random();
     }
 
+    public Graph generateRandomGraph(int noOfNodes){
+        Graph graph = generateRandomTree(noOfNodes);
+        int additionalVertices = 1;
+        if(noOfNodes > 5){
+            additionalVertices = random.nextInt(8 ) + 1;
+        }
+        while(additionalVertices > 0){
+            int u = random.nextInt(noOfNodes);
+            int v = random.nextInt(noOfNodes);
+            if( u != v && !graph.haveEdge(u,v)){
+                int weight = random.nextInt(MAX_WEIGHT + 1) + MAX_WEIGHT;
+                graph.addEdge(u,v,weight);
+                additionalVertices --;
+            }
+        }
+        return graph;
+    }
+
+    private int computeMaxEdges(int noOfNodes) {
+        return (noOfNodes * (noOfNodes - 1)) / 2;
+    }
+
     // Function to Generate Random Tree using Prufer Sequence
     // Taken from https://www.geeksforgeeks.org/random-tree-generator-using-prufer-sequence-with-examples/ and modified
-    public Graph generateRandomTree(int n)
+    private Graph generateRandomTree(int n)
     {
         Graph graph = new Graph(n);
+
         int length = n - 2;
         int[] arr = new int[length];
 
@@ -215,12 +268,14 @@ class RandomGraphGenerator {
         for (int i = 0; i < length; i++) {
             arr[i] = random.nextInt(length + 1) + 1;
         }
-        generateTreeEdges(arr, length, graph);
+        int mstWeight = generateTreeEdges(arr, length, graph);
+        graph.setMstWeight(mstWeight);
         return graph;
     }
 
-    private void generateTreeEdges(int prufer[], int m, Graph graph)
+    private int generateTreeEdges(int prufer[], int m, Graph graph)
     {
+        int mst_weight = 0;
         int vertices = m + 2;
         int vertex_set[] = new int[vertices];
 
@@ -245,9 +300,12 @@ class RandomGraphGenerator {
                     // Remove from Prufer set and print
                     // pair.
                     vertex_set[j] = -1;
-                    graph.addEdge(j, prufer[i] - 1, 1);
+//                    System.out.print("(" + (j) + ", "
+//                            + (prufer[i] - 1) + ") ");
+                    int weight = random.nextInt(MAX_WEIGHT) + 1;
+                    graph.addEdge(j, prufer[i] - 1, weight);
+                    mst_weight +=  weight;
                     vertex_set[prufer[i] - 1]--;
-
                     break;
                 }
             }
@@ -261,14 +319,19 @@ class RandomGraphGenerator {
         for (int i = 0; i < vertices; i++) {
             if (vertex_set[i] == 0 && j == 0) {
                 temp_u = i;
+//                System.out.print("(" + (i) + ", ");
                 j++;
             }
             else if (vertex_set[i] == 0 && j == 1) {
+//                System.out.print((i) + ")\n");
                 temp_v = i;
             }
         }
-        if(temp_u > 0 && temp_v >0){
-            graph.addEdge(temp_u,temp_v, 1);
+        if(temp_u >= 0 && temp_v >= 0){
+            int weight = random.nextInt(MAX_WEIGHT) + 1;
+            graph.addEdge(temp_u,temp_v, weight);
+            mst_weight +=  weight;
         }
+        return mst_weight;
     }
 }
