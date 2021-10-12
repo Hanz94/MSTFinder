@@ -1,5 +1,4 @@
-import java.util.LinkedList;
-import java.util.Random;
+import java.util.*;
 
 /**
  * created by hansikaweerasena
@@ -10,28 +9,59 @@ public class MSTFinder {
     public static void main(String[] args)
     {
 
-        Graph g = new Graph(5);
-        g.addEdge(0,1,2);
-        g.addEdge(0, 3, 6);
-        g.addEdge(1,2,3);
-        g.addEdge(1,3,8);
-        g.addEdge(1,4,5);
-        g.addEdge(2,4,7);
-        g.addEdge(3,4,9);
+        if (args.length > 0 && args[0].toLowerCase(Locale.ROOT).startsWith("--ex")) {
+            runExperiments();
+        } else if(args.length > 0 && args[0].toLowerCase(Locale.ROOT).startsWith("--val")) {
+            validate();
+        }else {
 
-        SpanningTree mst = generateMST(g);
-        mst.print();
+            Graph g = new Graph(5);
+            g.print();
+            g.addEdge(0, 1, 2);
+            g.addEdge(0, 3, 6);
+            g.addEdge(1, 2, 3);
+            g.addEdge(1, 3, 8);
+            g.addEdge(1, 4, 5);
+            g.addEdge(2, 4, 7);
+            g.addEdge(3, 4, 9);
 
-        RandomGraphGenerator gg = RandomGraphGenerator.getRandomGraphGenerator();
-        Graph randomGraph = gg.generateRandomGraph(10);
-        randomGraph.print();
-
-        SpanningTree mst2 = generateMST(randomGraph);
-
-        if(mst2.getTotalWeight() == randomGraph.getMstWeight()){
-            System.out.println("Validated");
+            SpanningTree mst = generateMST(g);
+            mst.print();
         }
+    }
 
+    private static void runExperiments() {
+
+        int noOFIterations = 10;
+        int[] experimentParms = new int[]{ 10,100,10000,100000,10000000,100000000};
+
+        for (int noOfNodes :experimentParms) {
+            System.out.println( "For Nodes : " + noOfNodes );
+            long totalTime = 0;
+            for (int i = 0; i < noOFIterations; i ++){
+                Graph g = RandomGraphGenerator.getRandomGraphGenerator().generateRandomGraph(noOfNodes);
+                long startTime = System.nanoTime();
+                generateMST(g);
+                long endTime = System.nanoTime();
+                long duration = (endTime - startTime);
+                totalTime = totalTime + duration;
+            }
+            System.out.println("Average Time : " + totalTime/noOFIterations);
+        }
+    }
+
+    private static void validate(){
+        int noOFIterations = 10;
+        Random random = new Random();
+        int noOfNodes = random.nextInt(10000);
+        for (int i = 0; i < noOFIterations; i ++){
+            System.out.println( "For Nodes : " + noOfNodes );
+            Graph g = RandomGraphGenerator.getRandomGraphGenerator().generateRandomGraph(noOfNodes);
+            SpanningTree mst = generateMST(g);
+            if(mst.getTotalWeight() == g.getMstWeight()){
+                System.out.println("Validated");
+            }
+        }
     }
 
     private static int minKey(int[] key, Boolean[] mstSet)
@@ -114,7 +144,7 @@ class Graph {
 
     private int noOfNodes;
     private LinkedList<Edge> adjLst[];
-    private int mstWeight;
+    private long mstWeight;
 
     public Graph(int noOfNodes) {
         this.noOfNodes = noOfNodes;
@@ -163,11 +193,11 @@ class Graph {
         return adjLst;
     }
 
-    public int getMstWeight() {
+    public long getMstWeight() {
         return mstWeight;
     }
 
-    public void setMstWeight(int mst_weight) {
+    public void setMstWeight(long mst_weight) {
         this.mstWeight = mst_weight;
     }
 }
@@ -201,6 +231,7 @@ class SpanningTree {
 
     public void print()
     {
+        System.out.println("The MST \n");
         System.out.println("Edge \tWeight");
         for (int i = 1; i < parent.length; i++)
             System.out.println(parent[i] + " - " + i + "\t" + key[i]);
@@ -268,14 +299,14 @@ class RandomGraphGenerator {
         for (int i = 0; i < length; i++) {
             arr[i] = random.nextInt(length + 1) + 1;
         }
-        int mstWeight = generateTreeEdges(arr, length, graph);
+        long mstWeight = generateTreeEdges(arr, length, graph);
         graph.setMstWeight(mstWeight);
         return graph;
     }
 
-    private int generateTreeEdges(int prufer[], int m, Graph graph)
+    private long generateTreeEdges(int prufer[], int m, Graph graph)
     {
-        int mst_weight = 0;
+        long mst_weight = 0;
         int vertices = m + 2;
         int vertex_set[] = new int[vertices];
 
